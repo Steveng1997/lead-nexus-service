@@ -2,22 +2,32 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-// 1. Configuramos la conexión
+// Validación de seguridad para evitar errores de conexión
 const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error(
+    "❌ Error: DATABASE_URL no definida. Verifica tu archivo .env",
+  );
+}
+
+/**
+ * Configuración del Pool utilizando el connectionString directamente.
+ * Evitamos pasar un objeto complejo para que el driver no falle al parsear credenciales.
+ */
 const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
-
 const prisma = new PrismaClient({ adapter });
 
+/**
+ * LeadService: Centraliza la lógica de persistencia y analítica.
+ */
 export class LeadService {
-  /**
-   * Parte 1: Listado de leads con paginación y filtros.
-   */
   async getAllLeads(page: number = 1, limit: number = 10, filters: any = {}) {
     const skip = (page - 1) * limit;
 
     const where: any = {
-      deletedAt: null, // Solo registros activos
+      deletedAt: null,
       ...(filters.fuente && { fuente: filters.fuente }),
       ...(filters.startDate &&
         filters.endDate && {
@@ -41,13 +51,11 @@ export class LeadService {
     return { data, total, page, lastPage: Math.ceil(total / limit) };
   }
 
-  /**
-   * Parte 2: Creación de un nuevo prospecto.
-   */
   async createLead(data: any) {
     const existing = await prisma.lead.findUnique({
       where: { email: data.email },
     });
+
     if (existing) throw new Error("El correo electrónico ya está registrado.");
 
     return await prisma.lead.create({
@@ -60,9 +68,19 @@ export class LeadService {
     });
   }
 
-  /**
-   * Parte 4: Eliminación lógica (Soft Delete).
-   */
+  async updateLead(id: string, data: any) {
+    // Nota: El update no requiere borrado previo.
+    return await prisma.lead.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(data.presupuesto && {
+          presupuesto: parseFloat(data.presupuesto.toString()),
+        }),
+      },
+    });
+  }
+
   async softDelete(id: string) {
     return await prisma.lead.update({
       where: { id },
@@ -70,11 +88,11 @@ export class LeadService {
     });
   }
 
-  /**
-   * Parte 5: Métricas generales para el Dashboard.
-   */
   async getStats() {
-    const [total, groups, agg] = await Promise.all([
+    const sieteDiasAtras = new Date();
+    sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 7);
+
+    const [total, groups, agg, recientes] = await Promise.all([
       prisma.lead.count({ where: { deletedAt: null } }),
       prisma.lead.groupBy({
         by: ["fuente"],
@@ -85,27 +103,29 @@ export class LeadService {
         _avg: { presupuesto: true },
         where: { deletedAt: null },
       }),
+      prisma.lead.count({
+        where: { deletedAt: null, createdAt: { gte: sieteDiasAtras } },
+      }),
     ]);
 
     return {
       total_leads: total,
+      leads_ultimos_7_dias: recientes,
       promedio_presupuesto: Number(agg._avg?.presupuesto?.toFixed(2)) || 0,
-      distribucion: groups.map((g) => ({
+      distribucion: groups.map((g: any) => ({
         fuente: g.fuente,
         cantidad: g._count._all,
       })),
     };
   }
 
-  /**
-   * Parte 3: Recuperación de datos crudos para la IA.
-   */
   async getLeadsForAI(filters: any) {
     return await prisma.lead.findMany({
       where: {
         deletedAt: null,
         ...(filters.fuente && { fuente: filters.fuente }),
       },
+      take: 50,
     });
   }
 }
