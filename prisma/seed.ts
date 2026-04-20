@@ -1,85 +1,102 @@
-// @ts-nocheck
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
-// En Prisma 7, si el esquema está vacío, se debe pasar así:
-const prisma = new PrismaClient({
-  datasourceUrl:
-    "postgresql://postgres:test1234@localhost:5432/lead_nexus_db?schema=public",
-});
+// Usamos la misma conexión que en el servicio
+const connectionString =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:test1234@localhost:5432/lead_nexus_db?schema=public";
+
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🚀 Iniciando seed...");
+  console.log("🌱 Empezando el sembrado de datos...");
+
+  // Limpiar datos existentes para evitar duplicados
+  // await prisma.lead.deleteMany();
+
   const leads = [
+    {
+      nombre: "Lucía Alfonso",
+      email: "lucia@example.com",
+      fuente: "instagram",
+      producto_interes: "Curso Backend",
+      presupuesto: 250.5,
+    },
+    {
+      nombre: "Steven Dev",
+      email: "steven@example.com",
+      fuente: "facebook",
+      producto_interes: "Asesoría Tech",
+      presupuesto: 500.0,
+    },
     {
       nombre: "Juan Perez",
       email: "juan@example.com",
-      fuente: "Web",
-      producto_interes: "Software A",
+      fuente: "landing_page",
+      producto_interes: "Ebook Marketing",
+      presupuesto: 50.0,
     },
     {
-      nombre: "Maria Lopez",
+      nombre: "Maria Garcia",
       email: "maria@example.com",
-      fuente: "LinkedIn",
-      producto_interes: "Software B",
+      fuente: "referido",
+      producto_interes: "Curso Backend",
+      presupuesto: 300.0,
     },
     {
       nombre: "Carlos Ruiz",
-      email: "cruiz@example.com",
-      fuente: "Referido",
-      producto_interes: "Servicio Cloud",
-    },
-    {
-      nombre: "Ana Gomez",
-      email: "agomez@example.com",
-      fuente: "Web",
-      producto_interes: "Software A",
-    },
-    {
-      nombre: "Luis Prada",
-      email: "lprada@example.com",
-      fuente: "Instagram",
+      email: "carlos@example.com",
+      fuente: "instagram",
       producto_interes: "Consultoría",
+      presupuesto: 1000.0,
     },
     {
-      nombre: "Elena Mora",
-      email: "emora@example.com",
-      fuente: "Web",
-      producto_interes: "Software B",
+      nombre: "Ana López",
+      email: "ana@example.com",
+      fuente: "facebook",
+      producto_interes: "Curso Backend",
+      presupuesto: 250.0,
     },
     {
-      nombre: "Pedro Diaz",
-      email: "pdiaz@example.com",
-      fuente: "LinkedIn",
-      producto_interes: "Software A",
+      nombre: "Roberto Gomez",
+      email: "roberto@example.com",
+      fuente: "otro",
+      producto_interes: "Soporte",
+      presupuesto: 150.0,
     },
     {
-      nombre: "Sonia Vega",
-      email: "svega@example.com",
-      fuente: "Web",
-      producto_interes: "Software C",
+      nombre: "Laura Beltrán",
+      email: "laura@example.com",
+      fuente: "landing_page",
+      producto_interes: "Curso Backend",
+      presupuesto: 280.0,
     },
     {
-      nombre: "Jorge Tovar",
-      email: "jtovar@example.com",
-      fuente: "Referido",
-      producto_interes: "Software B",
+      nombre: "Diego Torres",
+      email: "diego@example.com",
+      fuente: "instagram",
+      producto_interes: "Ebook Marketing",
+      presupuesto: 45.0,
     },
     {
-      nombre: "Lucia Rios",
-      email: "lrios@example.com",
-      fuente: "LinkedIn",
-      producto_interes: "Software A",
+      nombre: "Elena Sanz",
+      email: "elena@example.com",
+      fuente: "referido",
+      producto_interes: "Consultoría",
+      presupuesto: 900.0,
     },
   ];
 
   for (const lead of leads) {
-    await prisma.lead.upsert({
-      where: { email: lead.email },
-      update: {},
-      create: lead,
+    await prisma.lead.create({
+      data: lead,
     });
   }
-  console.log("✅ Seed finalizado: 10 leads creados.");
+
+  console.log("✅ Se han creado 10 leads de prueba correctamente.");
 }
 
 main()
@@ -89,4 +106,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end(); // Cerramos el pool de conexiones
   });

@@ -1,12 +1,14 @@
 {
   "name": "lead-nexus-service",
   "version": "1.0.0",
-  "description": "��#\u0000 \u0000L\u0000e\u0000a\u0000d\u0000 \u0000N\u0000e\u0000x\u0000u\u0000s\u0000 \u0000S\u0000e\u0000r\u0000v\u0000i\u0000c\u0000e\u0000\r\u0000 \u0000",
-  "main": "index.js",
+  "description": "Lead Nexus Service",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.ts"
+    "start": "node dist/server.js",
+    "prisma:generate": "npx prisma generate"
   },
   "repository": {
     "type": "git",
@@ -15,22 +17,29 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Steveng1997/lead-nexus-service/issues"
   },
   "homepage": "https://github.com/Steveng1997/lead-nexus-service#readme",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
-    "@prisma/config": "^7.7.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.0",
+    "pg": "^8.20.0",
+    "prisma": "^7.7.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.6.0",
-    "ts-node": "^10.9.2"
+    "@prisma/config": "^7.7.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.19.17",
+    "@types/pg": "^8.20.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
