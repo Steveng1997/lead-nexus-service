@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,14 +10,16 @@ datasource db {
 }
 
 model Lead {
-  id              String    @id @default(uuid())
-  nombre          String
-  email           String    @unique
-  telefono        String?
-  fuente          String    // instagram, facebook, landing_page, referido, otro
-  producto_interes String?
-  presupuesto     Float?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  deletedAt       DateTime? @map("deleted_at") // Para Soft Delete
+  id               String    @id @default(uuid())
+  nombre           String    // obligatorio
+  email            String    @unique // obligatorio y único
+  telefono         String?   // opcional
+  fuente           String    // obligatorio (instagram, facebook, landing_page, referido, otro)
+  producto_interes String?   @map("producto_interes") // opcional
+  presupuesto      Float?    // opcional, en USD
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime? // Soft delete (Parte 1 - DELETE)
+
+  @@map("leads")
 }
