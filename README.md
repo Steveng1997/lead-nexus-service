@@ -87,7 +87,3 @@ Se incluye el archivo `postman_collection.json` en la raíz del proyecto para fa
 * **Validaciones:** El sistema incluye validación de duplicados (email) y manejo de errores consistente con códigos HTTP semánticos.
 * **Arquitectura:** Se implementó el patrón *Service-Controller* para desacoplar la lógica de negocio de la capa de transporte (Express).
 * **Soft Delete:** Los registros eliminados no se borran físicamente, facilitando auditorías o recuperaciones.
-
----
-
-**¡Desarrollado con éxito para la prueba técnica de One Million Copy!**
