@@ -1,6 +1,3 @@
-Aquí tienes el README.md profesional y completo, listo para copiar y pegar en tu proyecto. Está diseñado específicamente con la estructura que requiere una prueba técnica para lucir profesional y organizada.
-
-Copia y pega este contenido en un archivo llamado README.md:
 Markdown
 # 🚀 LeadNexus API
 
