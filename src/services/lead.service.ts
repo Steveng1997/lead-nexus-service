@@ -2,6 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
+/**
+ * Configuración de la base de datos utilizando el adaptador de pg para Prisma.
+ * Esto permite una mejor gestión del pool de conexiones en entornos PostgreSQL.
+ */
 const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://postgres:test1234@localhost:5432/lead_nexus_db?schema=public";
@@ -12,22 +16,37 @@ const prisma = new PrismaClient({ adapter });
 
 export class LeadService {
   /**
-   * Obtiene leads paginados que no han sido borrados
+   * Obtiene una lista paginada de leads con soporte para filtros dinámicos.
+   * Cumple con los requerimientos de filtrado por fuente y rango de fechas.
+   * * @param page Número de página actual
+   * @param limit Cantidad de registros por página
+   * @param filters Objeto con filtros opcionales (fuente, startDate, endDate)
    */
-  async getAllLeads(page: number = 1, limit: number = 10) {
+  async getAllLeads(page: number = 1, limit: number = 10, filters: any = {}) {
     const skip = (page - 1) * limit;
+
+    // Construcción del objeto 'where' para filtrado dinámico
+    const where: any = {
+      deletedAt: null, // Excluir registros eliminados (Soft Delete)
+      ...(filters.fuente && { fuente: filters.fuente }),
+      ...(filters.startDate &&
+        filters.endDate && {
+          createdAt: {
+            gte: new Date(filters.startDate),
+            lte: new Date(filters.endDate),
+          },
+        }),
+    };
+
     try {
       const [data, total] = await Promise.all([
         prisma.lead.findMany({
-          // Filtramos por registros cuya fecha de borrado sea nula
-          where: { deletedAt: null },
+          where,
           skip,
           take: limit,
           orderBy: { createdAt: "desc" },
         }),
-        prisma.lead.count({
-          where: { deletedAt: null },
-        }),
+        prisma.lead.count({ where }),
       ]);
 
       return {
@@ -37,13 +56,14 @@ export class LeadService {
         lastPage: Math.ceil(total / limit),
       };
     } catch (error) {
-      console.error("Error en getAllLeads:", error);
-      throw error;
+      console.error("Error en getAllLeads Service:", error);
+      throw new Error("No se pudo recuperar la lista de leads.");
     }
   }
 
   /**
-   * Crea un lead validando unicidad de email
+   * Registra un nuevo lead verificando que el email sea único.
+   * Realiza una conversión segura del presupuesto a tipo Float.
    */
   async createLead(data: any) {
     try {
@@ -68,13 +88,14 @@ export class LeadService {
         },
       });
     } catch (error) {
-      console.error("Error en createLead:", error);
+      console.error("Error en createLead Service:", error);
       throw error;
     }
   }
 
   /**
-   * Genera estadísticas agregadas para el dashboard
+   * Obtiene métricas agregadas para el dashboard ejecutivo.
+   * Calcula el total, promedio de presupuesto y distribución por canales.
    */
   async getStats() {
     try {
@@ -95,33 +116,59 @@ export class LeadService {
 
       return {
         total_leads: total,
-        // .toFixed(2) para que el promedio se vea profesional (ej: 250.50)
         promedio_presupuesto: Number(agg._avg?.presupuesto?.toFixed(2)) || 0,
         distribucion_fuentes: groups.map((g) => ({
           fuente: g.fuente,
-          // Acceso seguro al conteo autogenerado por Prisma
           cantidad: g._count?._all || 0,
         })),
       };
     } catch (error) {
-      console.error("Error en getStats:", error);
+      console.error("Error en getStats Service:", error);
+      throw new Error("Error al calcular estadísticas.");
+    }
+  }
+
+  /**
+   * Obtiene la colección completa de leads filtrados para el análisis de IA.
+   * A diferencia de getAllLeads, este método no aplica paginación para permitir
+   * que el LLM analice el set de datos completo.
+   */
+  async getLeadsForAI(filters: any = {}) {
+    try {
+      return await prisma.lead.findMany({
+        where: {
+          deletedAt: null,
+          ...(filters.fuente && { fuente: filters.fuente }),
+          ...(filters.startDate &&
+            filters.endDate && {
+              createdAt: {
+                gte: new Date(filters.startDate),
+                lte: new Date(filters.endDate),
+              },
+            }),
+        },
+      });
+    } catch (error) {
+      console.error("Error en getLeadsForAI Service:", error);
       throw error;
     }
   }
 
   /**
-   * Soft Delete: Actualiza el campo deletedAt en lugar de borrar la fila
+   * Implementación de Soft Delete para preservar la integridad referencial.
+   * Marca el registro con una marca de tiempo en 'deletedAt' en lugar de eliminarlo físicamente.
    */
   async softDelete(id: string) {
     try {
-      // Verificamos primero si existe para dar un error claro si no
       return await prisma.lead.update({
         where: { id },
         data: { deletedAt: new Date() },
       });
     } catch (error) {
-      console.error("Error en softDelete:", error);
-      throw new Error("No se pudo eliminar el lead. El ID no existe.");
+      console.error("Error en softDelete Service:", error);
+      throw new Error(
+        "No se pudo procesar la eliminación. Verifique el ID proporcionado.",
+      );
     }
   }
 }
