@@ -1,22 +1,15 @@
 import { Router } from "express";
-import {
-  getLeads,
-  createLead,
-  getStats,
-  deleteLead,
-} from "../controllers/lead.controller.js";
-
+import * as leadCtrl from "../controllers/lead.controller.js";
 import { getAISummary } from "../controllers/ai.controller.js";
 
 const router = Router();
 
-// Endpoints básicos
-router.get("/", getLeads);
-router.get("/stats", getStats);
-router.post("/", createLead);
-router.delete("/:id", deleteLead);
+router.get("/", leadCtrl.getLeads);
+router.post("/", leadCtrl.createLead);
+router.get("/stats", leadCtrl.getStats);
+router.delete("/:id", leadCtrl.deleteLead);
 
-// Endpoint de IA (Parte 3)
+// Endpoint de IA
 router.post("/ai/summary", getAISummary);
 
 export default router;

@@ -1,3 +1,6 @@
+/**
+ * Interface que define la estructura de un Lead según los requerimientos técnicos.
+ */
 export interface Lead {
   id?: string;
   nombre: string;
@@ -6,6 +9,7 @@ export interface Lead {
   producto_interes: string;
   presupuesto?: number;
   telefono?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
 }

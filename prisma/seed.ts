@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-// Usamos la misma conexión que en el servicio
 const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://postgres:test1234@localhost:5432/lead_nexus_db?schema=public";
@@ -12,10 +11,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Empezando el sembrado de datos...");
-
-  // Limpiar datos existentes para evitar duplicados
-  // await prisma.lead.deleteMany();
+  console.log("🌱 Iniciando el seeding de 10 leads requeridos...");
 
   const leads = [
     {
@@ -91,20 +87,23 @@ async function main() {
   ];
 
   for (const lead of leads) {
-    await prisma.lead.create({
-      data: lead,
+    // Usamos upsert para evitar errores si el correo ya existe
+    await prisma.lead.upsert({
+      where: { email: lead.email },
+      update: {}, // No actualiza nada si ya existe
+      create: lead,
     });
   }
 
-  console.log("✅ Se han creado 10 leads de prueba correctamente.");
+  console.log("✅ Proceso completado: 10 leads listos en la base de datos.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error en el seeding:", e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end(); // Cerramos el pool de conexiones
+    await pool.end();
   });

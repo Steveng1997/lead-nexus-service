@@ -19,5 +19,5 @@ model Lead {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  @@map("lead")
+  @@map("leads")
 }
