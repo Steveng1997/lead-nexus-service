@@ -1,4 +1,3 @@
-Markdown
 # 🚀 LeadNexus API
 
 API RESTful diseñada para la gestión eficiente de prospectos (leads), incluyendo funcionalidades de paginación, filtrado, eliminación lógica (soft delete) e integración con servicios de Inteligencia Artificial para el análisis de datos.
