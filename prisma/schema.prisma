@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id              String    @id @default(uuid())
+  nombre          String
+  email           String    @unique
+  telefono        String?
+  fuente          String    // instagram, facebook, landing_page, referido, otro
+  producto_interes String?
+  presupuesto     Float?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at") // Para Soft Delete
+}

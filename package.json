@@ -1,0 +1,23 @@
+{
+  "name": "lead-nexus-service",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000L\u0000e\u0000a\u0000d\u0000 \u0000N\u0000e\u0000x\u0000u\u0000s\u0000 \u0000S\u0000e\u0000r\u0000v\u0000i\u0000c\u0000e\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Steveng1997/lead-nexus-service.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Steveng1997/lead-nexus-service/issues"
+  },
+  "homepage": "https://github.com/Steveng1997/lead-nexus-service#readme"
+}
